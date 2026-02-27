@@ -2,19 +2,20 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy shared package first
-COPY shared /shared
+# Copy root workspace config + all workspace packages
+COPY package.json package-lock.json ./
+COPY shared/ ./shared/
+COPY backend/ ./backend/
+# Frontend dir needed for workspace resolution but not used
+RUN mkdir -p frontend && echo '{"name":"@intent-platform/frontend","version":"1.0.0"}' > frontend/package.json
 
-# Install dependencies
-COPY backend/package*.json ./
-RUN npm install
+# Install workspace dependencies
+RUN npm install --workspace=shared --workspace=backend
 
-# Copy source code
-COPY backend/ .
-
-# Build TypeScript
-RUN npm run build
+# Build shared package (CJS + ESM)
+RUN cd shared && npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+WORKDIR /app/backend
+CMD ["npx", "tsx", "watch", "src/index.ts"]
