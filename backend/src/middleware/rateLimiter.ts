@@ -15,6 +15,7 @@ export function rateLimiter(req: Request, res: Response, next: NextFunction): vo
   const record = requestCounts.get(identifier);
 
   if (!record || now > record.resetTime) {
+    if (record) requestCounts.delete(identifier); // Clean expired entry
     requestCounts.set(identifier, {
       count: 1,
       resetTime: now + WINDOW_MS

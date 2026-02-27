@@ -107,13 +107,13 @@ export class CodeGeneratorService {
       this.wsService.broadcast(projectId, 'project:build:progress', {
         step: 'Installing dependencies'
       });
-      await execAsync('npm install', { cwd: projectPath });
+      await execAsync('npm install', { cwd: projectPath, timeout: 300000 });
 
       // Run build
       this.wsService.broadcast(projectId, 'project:build:progress', {
         step: 'Building project'
       });
-      const { stdout, stderr } = await execAsync('npm run build', { cwd: projectPath });
+      const { stdout, stderr } = await execAsync('npm run build', { cwd: projectPath, timeout: 300000 });
 
       const buildOutput: BuildOutput = {
         success: true,
@@ -485,7 +485,7 @@ dist
 
   private async runTests(projectPath: string): Promise<TestResults> {
     try {
-      const { stdout } = await execAsync('npm test', { cwd: projectPath });
+      const { stdout } = await execAsync('npm test', { cwd: projectPath, timeout: 300000 });
 
       return {
         success: true,

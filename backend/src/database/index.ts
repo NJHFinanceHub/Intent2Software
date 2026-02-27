@@ -10,6 +10,11 @@ export const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
+// Prevent pool errors from crashing the process
+pool.on('error', (error) => {
+  logger.error('Unexpected error on idle database client:', error);
+});
+
 export async function initializeDatabase(): Promise<void> {
   try {
     // Test connection

@@ -37,11 +37,17 @@ export function setupWebSocket(app: Application): void {
     });
 
     // Send initial connection success message
-    ws.send(JSON.stringify({
-      event: 'connected',
-      data: { projectId },
-      timestamp: new Date()
-    }));
+    if (ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.send(JSON.stringify({
+          event: 'connected',
+          data: { projectId },
+          timestamp: new Date()
+        }));
+      } catch (error) {
+        logger.error('Failed to send initial WebSocket message:', error);
+      }
+    }
   });
 
   logger.info('WebSocket server configured');

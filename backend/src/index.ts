@@ -9,7 +9,7 @@ import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { rateLimiter } from './middleware/rateLimiter';
 import { validateRequest } from './middleware/validator';
-import { initializeDatabase } from './database';
+import { initializeDatabase, pool } from './database';
 import { setupWebSocket } from './websocket';
 
 // Routes
@@ -26,6 +26,15 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'change-this-secret';
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
+// Global error handlers — prevent crashes from unhandled async errors
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+});
+
 async function startServer() {
   try {
     // Initialize database
@@ -36,8 +45,17 @@ async function startServer() {
     const app = express();
     const wsInstance = expressWs(app);
 
-    // Redis client for sessions
+    // Redis client for sessions with error/reconnect handling
     const redisClient = createClient({ url: REDIS_URL });
+
+    redisClient.on('error', (error) => {
+      logger.error('Redis client error:', error);
+    });
+
+    redisClient.on('reconnecting', () => {
+      logger.warn('Redis reconnecting...');
+    });
+
     await redisClient.connect();
     logger.info('Redis connected');
 
@@ -84,12 +102,15 @@ async function startServer() {
       logger.info(`CORS origin: ${CORS_ORIGIN}`);
     });
 
-    // Graceful shutdown
-    process.on('SIGTERM', async () => {
-      logger.info('SIGTERM received, shutting down gracefully');
-      await redisClient.quit();
+    // Graceful shutdown for both SIGTERM and SIGINT
+    const shutdown = async (signal: string) => {
+      logger.info(`${signal} received, shutting down gracefully`);
+      await redisClient.quit().catch(() => {});
       process.exit(0);
-    });
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
 
   } catch (error) {
     logger.error('Failed to start server:', error);
