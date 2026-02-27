@@ -49,3 +49,22 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# Package lock conflicts
+package-lock.json.orig
+yarn.lock.orig
+
+# Editor backup files
+*~.nib
+*.bak
+.#*
+
+# System files
+desktop.ini
+$RECYCLE.BIN/
+.Spotlight-V100
+.Trashes
+
+# Test artifacts
+*.test.js.snap
+__snapshots__/
