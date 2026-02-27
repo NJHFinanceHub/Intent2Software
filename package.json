@@ -4,11 +4,9 @@
   "description": "A platform that generates complete software projects from natural language descriptions",
   "private": true,
   "workspaces": [
-    "frontend",
+    "shared",
     "backend",
-    "generator",
-    "sandbox",
-    "shared"
+    "frontend"
   ],
   "scripts": {
     "install:all": "npm install && npm run install:frontend && npm run install:backend",
