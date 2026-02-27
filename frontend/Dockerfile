@@ -2,12 +2,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY ../shared /shared
+# Copy shared package first
+COPY shared /shared
 
+# Install dependencies
+COPY frontend/package*.json ./
 RUN npm install
 
-COPY . .
+# Copy source code
+COPY frontend/ .
 
 EXPOSE 5173
 

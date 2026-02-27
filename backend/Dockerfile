@@ -2,14 +2,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
-COPY ../shared /shared
+# Copy shared package first
+COPY shared /shared
 
+# Install dependencies
+COPY backend/package*.json ./
 RUN npm install
 
 # Copy source code
-COPY . .
+COPY backend/ .
 
 # Build TypeScript
 RUN npm run build

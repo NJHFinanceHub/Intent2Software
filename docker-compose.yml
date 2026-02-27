@@ -37,8 +37,8 @@ services:
   # Backend API
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
     container_name: intent-platform-backend
     ports:
       - "3000:3000"
@@ -72,8 +72,8 @@ services:
   # Frontend Application
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./frontend/Dockerfile
     container_name: intent-platform-frontend
     ports:
       - "5173:5173"
@@ -87,23 +87,6 @@ services:
     depends_on:
       - backend
     command: npm run dev
-
-  # Sandbox Manager
-  sandbox:
-    build:
-      context: ./sandbox
-      dockerfile: Dockerfile
-    container_name: intent-platform-sandbox
-    privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - project_storage:/projects
-      - ./sandbox:/app
-    environment:
-      DOCKER_HOST: unix:///var/run/docker.sock
-      PROJECT_STORAGE: /projects
-    depends_on:
-      - backend
 
 volumes:
   postgres_data:
