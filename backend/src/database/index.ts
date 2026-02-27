@@ -68,6 +68,20 @@ async function createTables(client: any): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_conversations_project_id ON conversations(project_id);
   `);
 
+  // Seed a default demo user
+  await client.query(`
+    INSERT INTO users (id, email, name, preferences, created_at, updated_at)
+    VALUES (
+      '00000000-0000-0000-0000-000000000001',
+      'demo@intent-platform.dev',
+      'Demo User',
+      '{"theme": "system", "notifications": true}'::jsonb,
+      NOW(),
+      NOW()
+    )
+    ON CONFLICT (id) DO NOTHING;
+  `);
+
   logger.info('Database tables created successfully');
 }
 

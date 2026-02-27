@@ -18,7 +18,7 @@ router.post('/', validateRequest(CreateProjectSchema), async (req: Request, res:
 
     // Create project
     const project = await projectService.createProject({
-      userId: 'default-user', // TODO: Get from session
+      userId: '00000000-0000-0000-0000-000000000001', // Demo user
       name,
       description,
       aiConfig
@@ -57,7 +57,7 @@ router.get('/:projectId', async (req: Request, res: Response, next: NextFunction
 // Get all projects for user
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = 'default-user'; // TODO: Get from session
+    const userId = '00000000-0000-0000-0000-000000000001'; // Demo user
     const projects = await projectService.getUserProjects(userId);
 
     res.json(projects);
