@@ -1,0 +1,100 @@
+import express from 'express';
+import expressWs from 'express-ws';
+import cors from 'cors';
+import session from 'express-session';
+import dotenv from 'dotenv';
+import { createClient } from 'redis';
+import RedisStore from 'connect-redis';
+import { logger } from './utils/logger';
+import { errorHandler } from './middleware/errorHandler';
+import { rateLimiter } from './middleware/rateLimiter';
+import { validateRequest } from './middleware/validator';
+import { initializeDatabase } from './database';
+import { setupWebSocket } from './websocket';
+
+// Routes
+import projectRoutes from './routes/projects';
+import conversationRoutes from './routes/conversations';
+import userRoutes from './routes/users';
+import healthRoutes from './routes/health';
+
+// Load environment variables
+dotenv.config();
+
+const PORT = process.env.PORT || 3000;
+const SESSION_SECRET = process.env.SESSION_SECRET || 'change-this-secret';
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
+
+async function startServer() {
+  try {
+    // Initialize database
+    await initializeDatabase();
+    logger.info('Database initialized');
+
+    // Create Express app with WebSocket support
+    const app = express();
+    const wsInstance = expressWs(app);
+
+    // Redis client for sessions
+    const redisClient = createClient({ url: REDIS_URL });
+    await redisClient.connect();
+    logger.info('Redis connected');
+
+    // Middleware
+    app.use(cors({
+      origin: CORS_ORIGIN,
+      credentials: true
+    }));
+    app.use(express.json({ limit: '10mb' }));
+    app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+    // Session management
+    app.use(session({
+      store: new RedisStore({ client: redisClient }),
+      secret: SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 // 24 hours
+      }
+    }));
+
+    // Rate limiting
+    app.use(rateLimiter);
+
+    // Routes
+    app.use('/api/health', healthRoutes);
+    app.use('/api/projects', projectRoutes);
+    app.use('/api/conversations', conversationRoutes);
+    app.use('/api/users', userRoutes);
+
+    // WebSocket setup
+    setupWebSocket(wsInstance.app);
+
+    // Error handling
+    app.use(errorHandler);
+
+    // Start server
+    app.listen(PORT, () => {
+      logger.info(`🚀 Backend server running on port ${PORT}`);
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`CORS origin: ${CORS_ORIGIN}`);
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', async () => {
+      logger.info('SIGTERM received, shutting down gracefully');
+      await redisClient.quit();
+      process.exit(0);
+    });
+
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

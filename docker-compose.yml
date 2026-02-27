@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: intent-platform-db
+    environment:
+      POSTGRES_DB: intent_platform
+      POSTGRES_USER: platform_user
+      POSTGRES_PASSWORD: platform_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache & Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: intent-platform-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: intent-platform-backend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://platform_user:platform_password@postgres:5432/intent_platform
+      REDIS_URL: redis://redis:6379
+      SESSION_SECRET: change-this-in-production
+      CORS_ORIGIN: http://localhost:5173
+      # AI Provider settings - users configure via UI
+      AI_PROVIDER: ${AI_PROVIDER:-anthropic}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Sandbox settings
+      SANDBOX_TIMEOUT: 300000
+      MAX_PROJECT_SIZE: 100M
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./shared:/shared
+      - project_storage:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: intent-platform-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3000
+      VITE_WS_URL: ws://localhost:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - ./shared:/shared
+    depends_on:
+      - backend
+    command: npm run dev
+
+  # Sandbox Manager
+  sandbox:
+    build:
+      context: ./sandbox
+      dockerfile: Dockerfile
+    container_name: intent-platform-sandbox
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - project_storage:/projects
+      - ./sandbox:/app
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+      PROJECT_STORAGE: /projects
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+  project_storage:
+
+networks:
+  default:
+    name: intent-platform-network

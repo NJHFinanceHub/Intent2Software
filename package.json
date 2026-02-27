@@ -1,0 +1,52 @@
+{
+  "name": "intent-to-software-platform",
+  "version": "1.0.0",
+  "description": "A platform that generates complete software projects from natural language descriptions",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "generator",
+    "sandbox",
+    "shared"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm run install:frontend && npm run install:backend",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
+    "install:generator": "cd generator && npm install",
+    "dev": "docker-compose up",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
+    "build:shared": "cd shared && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "migrate": "cd backend && npm run migrate",
+    "seed": "cd backend && npm run seed"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/intent-to-software-platform"
+  },
+  "keywords": [
+    "code-generation",
+    "ai",
+    "llm",
+    "software-development",
+    "automation"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
+  }
+}
