@@ -9,7 +9,7 @@ const userService = new UserService();
 // Get current user
 router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = 'default-user'; // TODO: Get from session
+    const userId = '00000000-0000-0000-0000-000000000001'; // Demo user
     const user = await userService.getUser(userId);
 
     if (!user) {
@@ -25,7 +25,7 @@ router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
 // Update AI config
 router.put('/me/ai-config', validateRequest(UpdateAIConfigSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = 'default-user'; // TODO: Get from session
+    const userId = '00000000-0000-0000-0000-000000000001'; // Demo user
     const aiConfig = req.body;
 
     await userService.updateAIConfig(userId, aiConfig);
@@ -39,7 +39,7 @@ router.put('/me/ai-config', validateRequest(UpdateAIConfigSchema), async (req: R
 // Update user preferences
 router.put('/me/preferences', validateRequest(UpdateUserPreferencesSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = 'default-user'; // TODO: Get from session
+    const userId = '00000000-0000-0000-0000-000000000001'; // Demo user
     const preferences = req.body;
 
     await userService.updatePreferences(userId, preferences);

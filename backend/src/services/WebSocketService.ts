@@ -55,7 +55,12 @@ export class WebSocketService {
 
     connections.forEach(ws => {
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(messageStr);
+        try {
+          ws.send(messageStr);
+        } catch (error) {
+          logger.error('Failed to send WebSocket message:', error);
+          connections.delete(ws);
+        }
       }
     });
 

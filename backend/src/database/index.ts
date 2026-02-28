@@ -10,6 +10,11 @@ export const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
+// Prevent pool errors from crashing the process
+pool.on('error', (error) => {
+  logger.error('Unexpected error on idle database client:', error);
+});
+
 export async function initializeDatabase(): Promise<void> {
   try {
     // Test connection
@@ -66,6 +71,20 @@ async function createTables(client: any): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
     CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
     CREATE INDEX IF NOT EXISTS idx_conversations_project_id ON conversations(project_id);
+  `);
+
+  // Seed a default demo user
+  await client.query(`
+    INSERT INTO users (id, email, name, preferences, created_at, updated_at)
+    VALUES (
+      '00000000-0000-0000-0000-000000000001',
+      'demo@intent-platform.dev',
+      'Demo User',
+      '{"theme": "system", "notifications": true}'::jsonb,
+      NOW(),
+      NOW()
+    )
+    ON CONFLICT (id) DO NOTHING;
   `);
 
   logger.info('Database tables created successfully');

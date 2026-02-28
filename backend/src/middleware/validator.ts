@@ -8,12 +8,12 @@ export function validateRequest(schema: ZodSchema) {
       schema.parse(req.body);
       next();
     } catch (error: any) {
-      throw new PlatformError(
+      next(new PlatformError(
         'Request validation failed',
         ErrorCode.VALIDATION_ERROR,
         400,
         error.errors
-      );
+      ));
     }
   };
 }
@@ -24,12 +24,12 @@ export function validateQuery(schema: ZodSchema) {
       schema.parse(req.query);
       next();
     } catch (error: any) {
-      throw new PlatformError(
+      next(new PlatformError(
         'Query validation failed',
         ErrorCode.VALIDATION_ERROR,
         400,
         error.errors
-      );
+      ));
     }
   };
 }

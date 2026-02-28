@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "ES2022",
     "lib": ["ES2022"],
-    "outDir": "./dist/cjs",
+    "outDir": "./dist/esm",
     "rootDir": "./src",
-    "declaration": true,
-    "declarationMap": true,
+    "declaration": false,
     "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,

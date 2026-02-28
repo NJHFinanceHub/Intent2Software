@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Key } from 'lucide-react';
+import { Save, Key, Check } from 'lucide-react';
 import { usersApi } from '../api/client';
 import { useStore } from '../store';
 import { AIProvider } from '@intent-platform/shared';
@@ -42,29 +42,29 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600 mt-1">Configure your AI provider and preferences</p>
-        </div>
+    <div className="max-w-2xl mx-auto px-6 py-12">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white tracking-tight">Settings</h1>
+        <p className="text-slate-400 text-sm mt-1">Configure your AI provider and preferences</p>
+      </div>
 
+      <div className="bg-surface-100 border border-border rounded-2xl overflow-hidden">
         <div className="p-6 space-y-6">
           {/* AI Provider Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               AI Provider
             </label>
             <select
               value={config.provider}
               onChange={(e) => setConfig({ ...config, provider: e.target.value as AIProvider })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-surface-300 border border-border-light rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-all appearance-none cursor-pointer"
             >
               <option value={AIProvider.ANTHROPIC}>Anthropic Claude</option>
               <option value={AIProvider.OPENAI}>OpenAI GPT-4</option>
               <option value={AIProvider.MOCK}>Mock (for testing)</option>
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-[11px] text-slate-500 mt-1.5">
               Choose which AI provider to use for code generation
             </p>
           </div>
@@ -72,25 +72,25 @@ export default function SettingsPage() {
           {/* API Key */}
           {config.provider !== AIProvider.MOCK && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Key className="w-4 h-4 inline mr-1" />
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                <Key className="w-3.5 h-3.5 inline mr-1.5 text-slate-400" />
                 API Key
               </label>
               <input
                 type="password"
                 value={config.apiKey}
                 onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-surface-300 border border-border-light rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-all font-mono"
                 placeholder={
                   config.provider === AIProvider.ANTHROPIC
                     ? 'sk-ant-...'
                     : 'sk-...'
                 }
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[11px] text-slate-500 mt-1.5">
                 {config.provider === AIProvider.ANTHROPIC
-                  ? 'Get your API key from https://console.anthropic.com'
-                  : 'Get your API key from https://platform.openai.com'}
+                  ? 'Get your API key from console.anthropic.com'
+                  : 'Get your API key from platform.openai.com'}
               </p>
             </div>
           )}
@@ -98,21 +98,21 @@ export default function SettingsPage() {
           {/* Model */}
           {config.provider !== AIProvider.MOCK && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Model (optional)
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Model <span className="text-slate-500 font-normal">(optional)</span>
               </label>
               <input
                 type="text"
                 value={config.model}
                 onChange={(e) => setConfig({ ...config, model: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-surface-300 border border-border-light rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-all font-mono"
                 placeholder={
                   config.provider === AIProvider.ANTHROPIC
                     ? 'claude-3-5-sonnet-20241022'
                     : 'gpt-4-turbo-preview'
                 }
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-[11px] text-slate-500 mt-1.5">
                 Leave blank to use default model
               </p>
             </div>
@@ -120,8 +120,8 @@ export default function SettingsPage() {
 
           {/* Temperature */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Temperature: {config.temperature}
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Temperature <span className="text-accent-light ml-1">{config.temperature}</span>
             </label>
             <input
               type="range"
@@ -130,28 +130,33 @@ export default function SettingsPage() {
               step="0.1"
               value={config.temperature}
               onChange={(e) => setConfig({ ...config, temperature: parseFloat(e.target.value) })}
-              className="w-full"
+              className="w-full h-1.5 bg-surface-300 rounded-full appearance-none cursor-pointer accent-accent"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-[11px] text-slate-500 mt-1.5">
               <span>More focused</span>
               <span>More creative</span>
             </div>
           </div>
+        </div>
 
-          {/* Save Button */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-            {saveMessage && (
-              <span className="text-sm text-green-600">{saveMessage}</span>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={isSaving || !config.apiKey}
-              className="ml-auto flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="w-4 h-4" />
-              <span>{isSaving ? 'Saving...' : 'Save Settings'}</span>
-            </button>
-          </div>
+        {/* Save Button */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-surface-200/50">
+          {saveMessage && (
+            <span className={`flex items-center gap-1.5 text-xs ${
+              saveMessage.includes('Failed') ? 'text-red-400' : 'text-emerald-400'
+            }`}>
+              {!saveMessage.includes('Failed') && <Check className="w-3.5 h-3.5" />}
+              {saveMessage}
+            </span>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={isSaving || (!config.apiKey && config.provider !== AIProvider.MOCK)}
+            className="ml-auto flex items-center gap-2 bg-accent hover:bg-accent-dark text-white px-5 py-2 rounded-xl text-sm font-medium shadow-lg shadow-accent/20 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all"
+          >
+            <Save className="w-4 h-4" />
+            {isSaving ? 'Saving...' : 'Save Settings'}
+          </button>
         </div>
       </div>
     </div>

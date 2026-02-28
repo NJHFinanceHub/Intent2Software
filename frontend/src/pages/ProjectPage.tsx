@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Download, Play, Loader, CheckCircle, XCircle } from 'lucide-react';
+import { Download, Play, Loader, CheckCircle, XCircle, Zap, Package } from 'lucide-react';
 import { projectsApi } from '../api/client';
 import { useStore } from '../store';
 import { WebSocketClient } from '../api/websocket';
@@ -105,42 +105,40 @@ export default function ProjectPage() {
 
   if (!currentProject) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <Loader className="w-6 h-6 animate-spin text-accent" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-[calc(100vh-57px)] flex flex-col">
       {/* Action Bar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
+      <div className="border-b border-border bg-surface-200/50 backdrop-blur-sm px-5 py-3">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">{currentProject.name}</h1>
-            <div className="flex items-center space-x-2 mt-1">
-              <StatusBadge status={currentProject.status} />
-              {currentProject.files.length > 0 && (
-                <span className="text-sm text-gray-600">
-                  {currentProject.files.length} files
-                </span>
-              )}
-            </div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-sm font-semibold text-white">{currentProject.name}</h1>
+            <StatusBadge status={currentProject.status} />
+            {currentProject.files.length > 0 && (
+              <span className="text-xs text-slate-500">
+                {currentProject.files.length} files
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             {currentProject.status === 'gathering_requirements' && (
               <button
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 bg-accent hover:bg-accent-dark text-white px-4 py-1.5 rounded-lg text-xs font-medium shadow-lg shadow-accent/20 disabled:opacity-50 disabled:shadow-none transition-all"
               >
                 {isGenerating ? (
-                  <Loader className="w-4 h-4 animate-spin" />
+                  <Loader className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <Play className="w-4 h-4" />
+                  <Zap className="w-3.5 h-3.5" />
                 )}
-                <span>Generate Code</span>
+                Generate Code
               </button>
             )}
 
@@ -149,17 +147,17 @@ export default function ProjectPage() {
                 <button
                   onClick={handleBuild}
                   disabled={isGenerating}
-                  className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 transition-all"
                 >
-                  <Play className="w-4 h-4" />
-                  <span>Build & Test</span>
+                  <Play className="w-3.5 h-3.5" />
+                  Build & Test
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+                  className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-slate-300 px-4 py-1.5 rounded-lg text-xs font-medium border border-border hover:border-border-light transition-all"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Download</span>
+                  <Download className="w-3.5 h-3.5" />
+                  Download
                 </button>
               </>
             )}
@@ -196,23 +194,23 @@ function StatusBadge({ status }: { status: string }) {
   const getStatusInfo = () => {
     switch (status) {
       case 'ready':
-        return { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', text: 'Ready' };
+        return { icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'Ready' };
       case 'failed':
-        return { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', text: 'Failed' };
+        return { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', text: 'Failed' };
       case 'generating':
       case 'building':
-        return { icon: Loader, color: 'text-blue-600', bg: 'bg-blue-50', text: status };
+        return { icon: Loader, color: 'text-accent-light', bg: 'bg-accent/10 border-accent/20', text: status };
       default:
-        return { icon: Loader, color: 'text-gray-600', bg: 'bg-gray-50', text: status };
+        return { icon: Package, color: 'text-slate-400', bg: 'bg-white/5 border-white/10', text: status.replace(/_/g, ' ') };
     }
   };
 
   const { icon: Icon, color, bg, text } = getStatusInfo();
 
   return (
-    <div className={`flex items-center space-x-1 px-2 py-1 rounded-full ${bg}`}>
-      <Icon className={`w-4 h-4 ${color} ${status.includes('ing') ? 'animate-spin' : ''}`} />
-      <span className={`text-sm font-medium ${color} capitalize`}>{text}</span>
+    <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border ${bg}`}>
+      <Icon className={`w-3 h-3 ${color} ${status.includes('ing') ? 'animate-spin' : ''}`} />
+      <span className={`text-[11px] font-medium ${color} capitalize`}>{text}</span>
     </div>
   );
 }
