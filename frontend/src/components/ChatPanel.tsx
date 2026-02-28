@@ -1,20 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, Zap } from 'lucide-react';
 import { Message, MessageRole } from '@intent-platform/shared';
-import { conversationsApi } from '../api/client';
+import { conversationsApi, projectsApi } from '../api/client';
 import { useStore } from '../store';
 
 interface ChatPanelProps {
   projectId: string;
+  onGenerate?: () => void;
 }
 
-export default function ChatPanel({ projectId }: ChatPanelProps) {
+export default function ChatPanel({ projectId, onGenerate }: ChatPanelProps) {
   const [input, setInput] = useState('');
+  const [readyToGenerate, setReadyToGenerate] = useState(false);
+  const autoSentRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const {
+    currentProject,
     currentConversation,
     setCurrentConversation,
+    setCurrentProject,
     addMessage,
     isChatLoading,
     setIsChatLoading
@@ -27,6 +32,20 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
   useEffect(() => {
     scrollToBottom();
   }, [currentConversation?.messages.length]);
+
+  // Auto-send project description as first message
+  useEffect(() => {
+    if (
+      currentConversation &&
+      currentConversation.messages.length === 0 &&
+      currentProject?.description &&
+      !autoSentRef.current &&
+      !isChatLoading
+    ) {
+      autoSentRef.current = true;
+      sendMessage(currentProject.description);
+    }
+  }, [currentConversation, currentProject]);
 
   const loadConversation = async () => {
     try {
@@ -41,39 +60,40 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isChatLoading) return;
+  const sendMessage = async (content: string) => {
+    if (!content.trim() || isChatLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: MessageRole.USER,
-      content: input,
+      content,
       timestamp: new Date()
     };
 
     addMessage(userMessage);
-    setInput('');
     setIsChatLoading(true);
 
     try {
       const response = await conversationsApi.sendMessage({
         projectId,
-        message: input
+        message: content
       });
 
       addMessage(response.message);
 
-      // Check if ready to generate
+      // Refresh project status
+      const updatedProject = await projectsApi.getById(projectId);
+      setCurrentProject(updatedProject);
+
       if (response.readyToGenerate) {
-        // Show generate button or auto-trigger generation
-        console.log('Ready to generate project');
+        setReadyToGenerate(true);
       }
     } catch (error) {
       console.error('Failed to send message:', error);
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: MessageRole.ASSISTANT,
-        content: 'Sorry, something went wrong processing your message. Please check that the AI provider is configured correctly and try again.',
+        content: 'Sorry, something went wrong. Please check that the AI provider is configured correctly and try again.',
         timestamp: new Date()
       };
       addMessage(errorMessage);
@@ -82,11 +102,23 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
     }
   };
 
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const msg = input;
+    setInput('');
+    await sendMessage(msg);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleGenerate = () => {
+    setReadyToGenerate(false);
+    onGenerate?.();
   };
 
   return (
@@ -98,13 +130,13 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {currentConversation?.messages.length === 0 && (
+        {currentConversation?.messages.length === 0 && !isChatLoading && (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-3">
               <Bot className="w-5 h-5 text-cyan-400" />
             </div>
             <p className="text-sm text-zinc-400">
-              Describe your project idea and I'll help you build it.
+              Starting conversation...
             </p>
           </div>
         )}
@@ -156,6 +188,19 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
             </div>
           </div>
         )}
+
+        {/* Inline Generate button */}
+        {readyToGenerate && !isChatLoading && (
+          <div className="flex justify-center py-4 animate-fade-in">
+            <button
+              onClick={handleGenerate}
+              className="flex items-center gap-2.5 bg-cyan-500 hover:bg-cyan-400 text-black px-6 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all hover:scale-[1.02]"
+            >
+              <Zap className="w-4 h-4" />
+              Generate Code
+            </button>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -166,7 +211,7 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Describe your software project..."
+            placeholder="Type a message..."
             className="flex-1 resize-none bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/40 transition-all"
             rows={2}
             disabled={isChatLoading}
@@ -175,7 +220,7 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
             onClick={handleSend}
             disabled={!input.trim() || isChatLoading}
             aria-label="Send message"
-            className="self-end bg-accent hover:bg-accent-dark text-white p-2.5 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-accent/20 disabled:shadow-none transition-all"
+            className="self-end bg-cyan-500 hover:bg-cyan-400 text-black p-2.5 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20 disabled:shadow-none transition-all"
           >
             <Send className="w-4 h-4" />
           </button>

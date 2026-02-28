@@ -1,15 +1,17 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { validateRequest } from '../middleware/validator';
 import { requireAuth } from '../middleware/auth';
-import { SendMessageSchema, MessageRole } from '@intent-platform/shared';
+import { SendMessageSchema, MessageRole, ProjectStatus } from '@intent-platform/shared';
 import { ConversationService } from '../services/ConversationService';
 import { AIProviderService } from '../services/AIProviderService';
+import { ProjectService } from '../services/ProjectService';
 import { logger } from '../utils/logger';
 
 const router = Router();
 router.use(requireAuth);
 const conversationService = new ConversationService();
 const aiProviderService = new AIProviderService();
+const projectService = new ProjectService();
 
 // Send message in conversation
 router.post('/message', validateRequest(SendMessageSchema), async (req: Request, res: Response, next: NextFunction) => {
@@ -33,6 +35,12 @@ router.post('/message', validateRequest(SendMessageSchema), async (req: Request,
 
     // Update conversation context
     await conversationService.updateContext(projectId, aiResponse.context);
+
+    // Update project status — only during early stages, never regress past generation
+    const project = await projectService.getProject(projectId);
+    if (project && (project.status === ProjectStatus.INITIALIZING || project.status === ProjectStatus.GATHERING_REQUIREMENTS)) {
+      await projectService.updateProjectStatus(projectId, ProjectStatus.GATHERING_REQUIREMENTS);
+    }
 
     logger.info(`Message processed for project ${projectId}`);
 

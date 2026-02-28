@@ -18,9 +18,11 @@ import projectRoutes from './routes/projects';
 import conversationRoutes from './routes/conversations';
 import userRoutes from './routes/users';
 import healthRoutes from './routes/health';
+import authRoutes from './routes/auth';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from project root
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const PORT = process.env.PORT || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET;
@@ -90,6 +92,7 @@ async function startServer() {
 
     // Routes
     app.use('/api/health', healthRoutes);
+    app.use('/api/auth', authRoutes);
     app.use('/api/projects', projectRoutes);
     app.use('/api/conversations', conversationRoutes);
     app.use('/api/users', userRoutes);

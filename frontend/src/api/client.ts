@@ -11,10 +11,8 @@ import {
   AIConfig
 } from '@intent-platform/shared';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 const client = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json'
   },
@@ -22,14 +20,28 @@ const client = axios.create({
   timeout: 30000
 });
 
-// Error handling interceptor
+// Auto-login: attempt demo login on first request
+let loginPromise: Promise<void> | null = null;
+
+async function ensureAuthenticated(): Promise<void> {
+  if (!loginPromise) {
+    loginPromise = axios.post('/api/auth/demo-login', {}, { withCredentials: true })
+      .then(() => { console.log('Demo login successful'); })
+      .catch((err) => { console.error('Demo login failed:', err); loginPromise = null; });
+  }
+  return loginPromise;
+}
+
+// Error handling interceptor with auto-retry after demo login
 client.interceptors.response.use(
   (response) => response,
-  (error) => {
-    console.error('API Error:', error.response?.data || error.message);
-    if (error.response?.status === 401) {
-      window.location.href = '/';
+  async (error) => {
+    if (error.response?.status === 401 && !error.config._retried) {
+      error.config._retried = true;
+      await ensureAuthenticated();
+      return client.request(error.config);
     }
+    console.error('API Error:', error.response?.data || error.message);
     throw error;
   }
 );

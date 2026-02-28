@@ -1,68 +1,88 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { Download, Play, Loader, CheckCircle, XCircle, Zap, Package } from 'lucide-react';
+import { Download, Play, Loader, CheckCircle, XCircle, Package, X, Zap } from 'lucide-react';
 import { projectsApi } from '../api/client';
 import { useStore } from '../store';
-import { WebSocketClient } from '../api/websocket';
 import ChatPanel from '../components/ChatPanel';
 import ProjectTree from '../components/ProjectTree';
 import PreviewPanel from '../components/PreviewPanel';
-import { GeneratedFile, WebSocketEvent } from '@intent-platform/shared';
+import { GeneratedFile } from '@intent-platform/shared';
+
+type Toast = { type: 'success' | 'error' | 'info'; message: string } | null;
 
 export default function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { currentProject, setCurrentProject, isGenerating, setIsGenerating } = useStore();
   const [selectedFile, setSelectedFile] = useState<GeneratedFile | null>(null);
-  const wsClientRef = useRef<WebSocketClient | null>(null);
+  const [toast, setToast] = useState<Toast>(null);
+  const [buildAction, setBuildAction] = useState<'generate' | 'build' | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasFiles = currentProject && currentProject.files.length > 0;
 
-  useEffect(() => {
-    if (!projectId) return;
+  const showToast = (type: 'success' | 'error' | 'info', message: string) => {
+    setToast({ type: type!, message });
+    setTimeout(() => setToast(null), 5000);
+  };
 
-    loadProject(projectId);
-
-    const client = new WebSocketClient(projectId);
-    wsClientRef.current = client;
-
-    client.on(WebSocketEvent.FILE_GENERATED, (data) => {
-      // update project files in store
-      console.log('File generated:', data);
-    });
-
-    client.on(WebSocketEvent.BUILD_COMPLETED, (data) => {
-      console.log('Build completed:', data);
-      setIsGenerating(false);
-    });
-
-    client.on(WebSocketEvent.ERROR, (data) => {
-      console.error('WebSocket error:', data);
-      setIsGenerating(false);
-    });
-
-    client.connect();
-
-    return () => {
-      client.disconnect();
-    };
-  }, [projectId]);
-
-  const loadProject = async (id: string) => {
+  const loadProject = useCallback(async (id: string) => {
     try {
       const project = await projectsApi.getById(id);
       setCurrentProject(project);
+      return project;
     } catch (error) {
       console.error('Failed to load project:', error);
+      return null;
     }
-  };
+  }, [setCurrentProject]);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
+  const startPolling = useCallback((id: string, action: 'generate' | 'build') => {
+    stopPolling();
+    setBuildAction(action);
+    pollRef.current = setInterval(async () => {
+      const project = await loadProject(id);
+      if (project && !['generating', 'planning', 'building', 'testing'].includes(project.status)) {
+        stopPolling();
+        setIsGenerating(false);
+        setBuildAction(null);
+
+        if (project.status === 'ready') {
+          if (action === 'generate') {
+            showToast('success', `Generated ${project.files.length} files successfully!`);
+          } else {
+            showToast('success', 'Build completed successfully!');
+          }
+        } else if (project.status === 'failed') {
+          showToast('error', `${action === 'generate' ? 'Generation' : 'Build'} failed. Check the logs.`);
+        }
+      }
+    }, 2000);
+  }, [loadProject, stopPolling, setIsGenerating]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    loadProject(projectId);
+    return () => stopPolling();
+  }, [projectId, loadProject, stopPolling]);
 
   const handleGenerate = async () => {
     if (!projectId) return;
 
     try {
       setIsGenerating(true);
+      showToast('info', 'Generating project files...');
       await projectsApi.generate({ projectId, confirmed: true });
+      startPolling(projectId, 'generate');
     } catch (error) {
       console.error('Failed to generate project:', error);
       setIsGenerating(false);
+      showToast('error', 'Failed to start generation.');
     }
   };
 
@@ -71,10 +91,13 @@ export default function ProjectPage() {
 
     try {
       setIsGenerating(true);
+      showToast('info', 'Building project — installing deps & compiling...');
       await projectsApi.build(projectId);
+      startPolling(projectId, 'build');
     } catch (error) {
       console.error('Failed to build project:', error);
       setIsGenerating(false);
+      showToast('error', 'Failed to start build.');
     }
   };
 
@@ -93,6 +116,7 @@ export default function ProjectPage() {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Failed to download project:', error);
+      showToast('error', 'Download failed.');
     }
   };
 
@@ -106,13 +130,30 @@ export default function ProjectPage() {
 
   return (
     <div className="h-[calc(100vh-57px)] flex flex-col">
+      {/* Toast notification */}
+      {toast && (
+        <div className={`fixed top-20 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border animate-slide-up ${
+          toast.type === 'success' ? 'bg-emerald-900/90 border-emerald-500/30 text-emerald-200' :
+          toast.type === 'error' ? 'bg-red-900/90 border-red-500/30 text-red-200' :
+          'bg-zinc-900/90 border-cyan-500/30 text-cyan-200'
+        }`}>
+          {toast.type === 'success' && <CheckCircle className="w-4 h-4 flex-shrink-0" />}
+          {toast.type === 'error' && <XCircle className="w-4 h-4 flex-shrink-0" />}
+          {toast.type === 'info' && <Loader className="w-4 h-4 flex-shrink-0 animate-spin" />}
+          <span className="text-sm font-medium">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-2 opacity-60 hover:opacity-100">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Action Bar */}
       <div className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-sm px-5 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-sm font-semibold text-white">{currentProject.name}</h1>
             <StatusBadge status={currentProject.status} />
-            {currentProject.files.length > 0 && (
+            {hasFiles && (
               <span className="text-xs text-zinc-500">
                 {currentProject.files.length} files
               </span>
@@ -120,27 +161,18 @@ export default function ProjectPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {currentProject.status === 'gathering_requirements' && (
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-1.5 rounded-lg text-xs shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:shadow-none transition-all"
-              >
-                {isGenerating ? (
-                  <Loader className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Zap className="w-3.5 h-3.5" />
-                )}
-                Generate Code
-              </button>
+            {isGenerating && (
+              <div className="flex items-center gap-2 text-cyan-300 text-xs">
+                <Loader className="w-3.5 h-3.5 animate-spin" />
+                {buildAction === 'build' ? 'Building...' : 'Generating...'}
+              </div>
             )}
 
-            {currentProject.status === 'ready' && (
+            {currentProject.status === 'ready' && !isGenerating && (
               <>
                 <button
                   onClick={handleBuild}
-                  disabled={isGenerating}
-                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 transition-all"
+                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
                 >
                   <Play className="w-3.5 h-3.5" />
                   Build & Test
@@ -160,24 +192,26 @@ export default function ProjectPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Chat Panel - 30% */}
-        <div className="w-[30%] min-w-[300px]">
-          <ChatPanel projectId={projectId!} />
+        {/* Chat Panel */}
+        <div className={hasFiles ? 'w-[30%] min-w-[300px] border-r border-zinc-800' : 'w-full max-w-3xl mx-auto'}>
+          <ChatPanel projectId={projectId!} onGenerate={handleGenerate} />
         </div>
 
-        {/* Project Tree - 20% */}
-        <div className="w-[20%] min-w-[200px]">
-          <ProjectTree
-            files={currentProject.files}
-            onFileSelect={setSelectedFile}
-            selectedFile={selectedFile}
-          />
-        </div>
-
-        {/* Preview Panel - flex-1 */}
-        <div className="flex-1">
-          <PreviewPanel file={selectedFile} />
-        </div>
+        {/* File Tree + Preview */}
+        {hasFiles && (
+          <>
+            <div className="w-[20%] min-w-[200px]">
+              <ProjectTree
+                files={currentProject.files}
+                onFileSelect={setSelectedFile}
+                selectedFile={selectedFile}
+              />
+            </div>
+            <div className="flex-1">
+              <PreviewPanel file={selectedFile} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
