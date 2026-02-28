@@ -11,7 +11,7 @@ import { GeneratedFile, WebSocketEvent } from '@intent-platform/shared';
 
 export default function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { currentProject, setCurrentProject, updateProject, isGenerating, setIsGenerating } = useStore();
+  const { currentProject, setCurrentProject, isGenerating, setIsGenerating } = useStore();
   const [selectedFile, setSelectedFile] = useState<GeneratedFile | null>(null);
   const wsClientRef = useRef<WebSocketClient | null>(null);
 
