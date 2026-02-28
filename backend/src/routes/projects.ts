@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { validateRequest } from '../middleware/validator';
+import { requireAuth } from '../middleware/auth';
 import { CreateProjectSchema, GenerateProjectSchema, BuildProjectSchema } from '@intent-platform/shared';
 import { ProjectService } from '../services/ProjectService';
 import { ConversationService } from '../services/ConversationService';
@@ -7,6 +8,7 @@ import { CodeGeneratorService } from '../services/CodeGeneratorService';
 import { logger } from '../utils/logger';
 
 const router = Router();
+router.use(requireAuth);
 const projectService = new ProjectService();
 const conversationService = new ConversationService();
 const codeGeneratorService = new CodeGeneratorService();
@@ -18,7 +20,7 @@ router.post('/', validateRequest(CreateProjectSchema), async (req: Request, res:
 
     // Create project
     const project = await projectService.createProject({
-      userId: '00000000-0000-0000-0000-000000000001', // Demo user
+      userId: (req as any).userId,
       name,
       description,
       aiConfig
@@ -57,7 +59,7 @@ router.get('/:projectId', async (req: Request, res: Response, next: NextFunction
 // Get all projects for user
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = '00000000-0000-0000-0000-000000000001'; // Demo user
+    const userId = (req as any).userId;
     const projects = await projectService.getUserProjects(userId);
 
     res.json(projects);

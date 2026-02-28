@@ -107,7 +107,7 @@ A complete full-stack platform that generates working software projects from nat
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/intent-to-software-platform.git
+git clone https://github.com/NJHFinanceHub/intent-to-software-platform.git
 cd intent-to-software-platform
 ```
 
@@ -482,8 +482,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For issues and questions:
-- Open an issue on [GitHub Issues](https://github.com/yourusername/intent-to-software-platform/issues)
-- Check [Discussions](https://github.com/yourusername/intent-to-software-platform/discussions)
+- Open an issue on [GitHub Issues](https://github.com/NJHFinanceHub/intent-to-software-platform/issues)
+- Check [Discussions](https://github.com/NJHFinanceHub/intent-to-software-platform/discussions)
 
 ## 🗺️ Roadmap
 

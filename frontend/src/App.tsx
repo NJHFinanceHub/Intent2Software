@@ -14,6 +14,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/project/:projectId" element={<ProjectPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<div className="flex items-center justify-center h-screen text-gray-400">Page not found</div>} />
           </Routes>
         </main>
       </div>

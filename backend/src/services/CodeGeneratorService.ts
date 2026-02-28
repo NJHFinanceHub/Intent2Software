@@ -14,7 +14,7 @@ import { logger } from '../utils/logger';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { existsSync } from 'fs';
 
 const execAsync = promisify(exec);
@@ -107,12 +107,14 @@ export class CodeGeneratorService {
       this.wsService.broadcast(projectId, 'project:build:progress', {
         step: 'Installing dependencies'
       });
-      await execAsync('npm install', { cwd: projectPath, timeout: 300000 });
+      // TODO: Ideally this should run inside a Docker sandbox to isolate untrusted code execution
+      await execAsync('npm install --ignore-scripts', { cwd: projectPath, timeout: 300000 });
 
       // Run build
       this.wsService.broadcast(projectId, 'project:build:progress', {
         step: 'Building project'
       });
+      // TODO: Ideally this should run inside a Docker sandbox to isolate untrusted code execution
       const { stdout, stderr } = await execAsync('npm run build', { cwd: projectPath, timeout: 300000 });
 
       const buildOutput: BuildOutput = {
@@ -470,7 +472,18 @@ dist
     }
 
     for (const file of files) {
-      const filePath = join(projectPath, file.path);
+      // Path traversal protection: reject paths containing '..'
+      if (file.path.includes('..')) {
+        throw new Error(`Invalid file path (path traversal detected): ${file.path}`);
+      }
+
+      const filePath = resolve(projectPath, file.path);
+
+      // Verify the resolved path is still within the project directory
+      if (!filePath.startsWith(resolve(projectPath))) {
+        throw new Error(`Invalid file path (escapes project directory): ${file.path}`);
+      }
+
       const dir = filePath.substring(0, filePath.lastIndexOf('/'));
 
       if (dir && !existsSync(dir)) {
@@ -485,6 +498,7 @@ dist
 
   private async runTests(projectPath: string): Promise<TestResults> {
     try {
+      // TODO: Ideally this should run inside a Docker sandbox to isolate untrusted code execution
       const { stdout } = await execAsync('npm test', { cwd: projectPath, timeout: 300000 });
 
       return {

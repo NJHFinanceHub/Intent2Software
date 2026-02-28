@@ -29,8 +29,10 @@ export default function SettingsPage() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      await usersApi.updateAIConfig(config as any);
-      setAIConfig(config as any);
+      await usersApi.updateAIConfig(config);
+      setAIConfig(config);
+      // Clear the API key from local state after saving
+      setConfig((prev) => ({ ...prev, apiKey: '' }));
       setSaveMessage('Settings saved successfully!');
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {

@@ -7,6 +7,13 @@ const wsService = new WebSocketService();
 
 export function setupWebSocket(app: Application): void {
   app.ws('/ws/:projectId', (ws: WebSocket, req) => {
+    // Validate session on WebSocket upgrade
+    if (!req.session?.userId) {
+      logger.warn('WebSocket connection rejected: no valid session');
+      ws.close(4001, 'Authentication required');
+      return;
+    }
+
     const projectId = req.params.projectId;
 
     logger.info(`WebSocket connection established for project ${projectId}`);

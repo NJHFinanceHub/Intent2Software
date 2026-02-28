@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Download, Play, Loader, CheckCircle, XCircle, Zap, Package } from 'lucide-react';
 import { projectsApi } from '../api/client';
@@ -13,44 +13,19 @@ export default function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { currentProject, setCurrentProject, updateProject, isGenerating, setIsGenerating } = useStore();
   const [selectedFile, setSelectedFile] = useState<GeneratedFile | null>(null);
-  const [wsClient, setWsClient] = useState<WebSocketClient | null>(null);
+  const wsClientRef = useRef<WebSocketClient | null>(null);
 
   useEffect(() => {
-    if (projectId) {
-      loadProject();
-      setupWebSocket();
-    }
-
-    return () => {
-      wsClient?.disconnect();
-    };
-  }, [projectId]);
-
-  const loadProject = async () => {
     if (!projectId) return;
 
-    try {
-      const project = await projectsApi.getById(projectId);
-      setCurrentProject(project);
-    } catch (error) {
-      console.error('Failed to load project:', error);
-    }
-  };
-
-  const setupWebSocket = () => {
-    if (!projectId) return;
+    loadProject(projectId);
 
     const client = new WebSocketClient(projectId);
-    client.connect();
-
-    client.on(WebSocketEvent.PROJECT_STATUS_CHANGED, (data) => {
-      if (projectId) {
-        updateProject(projectId, { status: data.status });
-      }
-    });
+    wsClientRef.current = client;
 
     client.on(WebSocketEvent.FILE_GENERATED, (data) => {
-      console.log('File generated:', data.file.path);
+      // update project files in store
+      console.log('File generated:', data);
     });
 
     client.on(WebSocketEvent.BUILD_COMPLETED, (data) => {
@@ -58,7 +33,25 @@ export default function ProjectPage() {
       setIsGenerating(false);
     });
 
-    setWsClient(client);
+    client.on(WebSocketEvent.ERROR, (data) => {
+      console.error('WebSocket error:', data);
+      setIsGenerating(false);
+    });
+
+    client.connect();
+
+    return () => {
+      client.disconnect();
+    };
+  }, [projectId]);
+
+  const loadProject = async (id: string) => {
+    try {
+      const project = await projectsApi.getById(id);
+      setCurrentProject(project);
+    } catch (error) {
+      console.error('Failed to load project:', error);
+    }
   };
 
   const handleGenerate = async () => {

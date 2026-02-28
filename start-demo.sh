@@ -3,6 +3,8 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "=== Starting Intent2Software Demo ==="
 
 # 1. Start PostgreSQL if not running
@@ -26,10 +28,10 @@ fi
 # 3. Start Backend if not running
 if ! curl -s http://localhost:3000/api/health >/dev/null 2>&1; then
   echo "[3/4] Starting Backend on port 3000..."
-  cd /home/user/Intent2Software/backend
+  cd "$SCRIPT_DIR/backend"
   nohup npx tsx watch src/index.ts > /tmp/backend.log 2>&1 &
   disown
-  cd /home/user/Intent2Software
+  cd "$SCRIPT_DIR"
 
   # Wait for backend to be ready
   for i in $(seq 1 15); do
@@ -45,10 +47,10 @@ fi
 # 4. Start Frontend if not running
 if ! curl -s http://localhost:5173/ >/dev/null 2>&1; then
   echo "[4/4] Starting Frontend on port 5173..."
-  cd /home/user/Intent2Software/frontend
+  cd "$SCRIPT_DIR/frontend"
   nohup npx vite > /tmp/frontend.log 2>&1 &
   disown
-  cd /home/user/Intent2Software
+  cd "$SCRIPT_DIR"
 
   # Wait for frontend to be ready
   for i in $(seq 1 15); do

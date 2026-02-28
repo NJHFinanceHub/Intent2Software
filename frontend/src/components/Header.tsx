@@ -30,6 +30,7 @@ export default function Header() {
             </Link>
             <Link
               to="/settings"
+              aria-label="Settings"
               className={`p-2 rounded-lg transition-colors ${
                 location.pathname === '/settings'
                   ? 'text-white bg-white/10'

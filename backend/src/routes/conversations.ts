@@ -1,11 +1,13 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { validateRequest } from '../middleware/validator';
+import { requireAuth } from '../middleware/auth';
 import { SendMessageSchema } from '@intent-platform/shared';
 import { ConversationService } from '../services/ConversationService';
 import { AIProviderService } from '../services/AIProviderService';
 import { logger } from '../utils/logger';
 
 const router = Router();
+router.use(requireAuth);
 const conversationService = new ConversationService();
 const aiProviderService = new AIProviderService();
 

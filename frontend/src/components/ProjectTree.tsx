@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronRight, ChevronDown, File, Folder } from 'lucide-react';
 import { GeneratedFile } from '@intent-platform/shared';
 
@@ -124,7 +124,7 @@ export default function ProjectTree({ files, onFileSelect, selectedFile }: Proje
     );
   };
 
-  const tree = buildTree();
+  const tree = useMemo(() => buildTree(), [files]);
 
   return (
     <div className="h-full overflow-y-auto bg-surface-200 border-r border-border">

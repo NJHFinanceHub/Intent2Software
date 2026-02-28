@@ -9,12 +9,15 @@ export class WebSocketClient {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   private listeners: Map<WebSocketEvent, Set<(data: any) => void>> = new Map();
+  private intentionalClose = false;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(projectId: string) {
     this.projectId = projectId;
   }
 
   connect(): void {
+    this.intentionalClose = false;
     const url = `${WS_URL}/ws/${this.projectId}`;
     this.ws = new WebSocket(url);
 
@@ -38,11 +41,18 @@ export class WebSocketClient {
 
     this.ws.onclose = () => {
       console.log('WebSocket disconnected');
-      this.reconnect();
+      if (!this.intentionalClose) {
+        this.reconnect();
+      }
     };
   }
 
   disconnect(): void {
+    this.intentionalClose = true;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     if (this.ws) {
       this.ws.close();
       this.ws = null;
@@ -81,7 +91,8 @@ export class WebSocketClient {
 
     console.log(`Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`);
 
-    setTimeout(() => {
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
       this.connect();
     }, delay);
   }

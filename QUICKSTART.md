@@ -133,7 +133,7 @@ docker-compose up --build
 ## Getting Help
 
 - Read the [full documentation](./README.md)
-- Check [GitHub Issues](https://github.com/yourusername/intent-to-software-platform/issues)
+- Check [GitHub Issues](https://github.com/NJHFinanceHub/intent-to-software-platform/issues)
 - Join our community discussions
 
 Happy building! 🚀

@@ -22,7 +22,10 @@ import healthRoutes from './routes/health';
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
-const SESSION_SECRET = process.env.SESSION_SECRET || 'change-this-secret';
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+  logger.warn('WARNING: SESSION_SECRET not set, using insecure default. Set SESSION_SECRET in production.');
+}
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
@@ -33,6 +36,7 @@ process.on('unhandledRejection', (reason) => {
 
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
+  process.exit(1);
 });
 
 async function startServer() {
@@ -70,7 +74,7 @@ async function startServer() {
     // Session management
     app.use(session({
       store: new RedisStore({ client: redisClient }),
-      secret: SESSION_SECRET,
+      secret: SESSION_SECRET || 'dev-only-insecure-default',
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -106,6 +110,7 @@ async function startServer() {
     const shutdown = async (signal: string) => {
       logger.info(`${signal} received, shutting down gracefully`);
       await redisClient.quit().catch(() => {});
+      await pool.end().catch(() => {});
       process.exit(0);
     };
 
