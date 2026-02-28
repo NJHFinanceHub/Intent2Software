@@ -3,6 +3,7 @@ import expressWs from 'express-ws';
 import cors from 'cors';
 import session from 'express-session';
 import dotenv from 'dotenv';
+import path from 'path';
 import { createClient } from 'redis';
 import RedisStore from 'connect-redis';
 import { logger } from './utils/logger';
@@ -95,6 +96,16 @@ async function startServer() {
 
     // WebSocket setup
     setupWebSocket(wsInstance.app);
+
+    // Serve frontend static files from production build
+    const frontendDist = path.resolve(__dirname, '../../frontend/dist');
+    app.use(express.static(frontendDist));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api') || req.path.startsWith('/ws')) {
+        return next();
+      }
+      res.sendFile(path.join(frontendDist, 'index.html'));
+    });
 
     // Error handling
     app.use(errorHandler);
