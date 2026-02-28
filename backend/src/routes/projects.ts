@@ -1,12 +1,14 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { validateRequest } from '../middleware/validator';
-import { CreateProjectSchema, GenerateProjectSchema, BuildProjectSchema } from '@intent-platform/shared';
+import { requireAuth } from '../middleware/auth';
+import { CreateProjectSchema, GenerateProjectSchema, BuildProjectSchema, ProjectStatus } from '@intent-platform/shared';
 import { ProjectService } from '../services/ProjectService';
 import { ConversationService } from '../services/ConversationService';
 import { CodeGeneratorService } from '../services/CodeGeneratorService';
 import { logger } from '../utils/logger';
 
 const router = Router();
+router.use(requireAuth);
 const projectService = new ProjectService();
 const conversationService = new ConversationService();
 const codeGeneratorService = new CodeGeneratorService();
@@ -18,7 +20,7 @@ router.post('/', validateRequest(CreateProjectSchema), async (req: Request, res:
 
     // Create project
     const project = await projectService.createProject({
-      userId: '00000000-0000-0000-0000-000000000001', // Demo user
+      userId: (req as any).userId,
       name,
       description,
       aiConfig
@@ -57,7 +59,7 @@ router.get('/:projectId', async (req: Request, res: Response, next: NextFunction
 // Get all projects for user
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = '00000000-0000-0000-0000-000000000001'; // Demo user
+    const userId = (req as any).userId;
     const projects = await projectService.getUserProjects(userId);
 
     res.json(projects);
@@ -82,12 +84,12 @@ router.post('/:projectId/generate', validateRequest(GenerateProjectSchema), asyn
     }
 
     // Update status to generating
-    await projectService.updateProjectStatus(projectId, 'generating');
+    await projectService.updateProjectStatus(projectId, ProjectStatus.GENERATING);
 
     // Generate code asynchronously
     codeGeneratorService.generateProject(projectId).catch(error => {
       logger.error(`Code generation failed for project ${projectId}:`, error);
-      projectService.updateProjectStatus(projectId, 'failed');
+      projectService.updateProjectStatus(projectId, ProjectStatus.FAILED);
     });
 
     res.json({
@@ -110,12 +112,12 @@ router.post('/:projectId/build', validateRequest(BuildProjectSchema), async (req
     }
 
     // Update status
-    await projectService.updateProjectStatus(projectId, 'building');
+    await projectService.updateProjectStatus(projectId, ProjectStatus.BUILDING);
 
     // Build project asynchronously
     codeGeneratorService.buildProject(projectId).catch(error => {
       logger.error(`Build failed for project ${projectId}:`, error);
-      projectService.updateProjectStatus(projectId, 'failed');
+      projectService.updateProjectStatus(projectId, ProjectStatus.FAILED);
     });
 
     res.json({

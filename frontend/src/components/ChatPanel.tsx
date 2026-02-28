@@ -26,7 +26,7 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
 
   useEffect(() => {
     scrollToBottom();
-  }, [currentConversation?.messages]);
+  }, [currentConversation?.messages.length]);
 
   const loadConversation = async () => {
     try {
@@ -165,7 +165,7 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Describe your software project..."
             className="flex-1 resize-none bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/40 transition-all"
             rows={2}
@@ -174,7 +174,8 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
           <button
             onClick={handleSend}
             disabled={!input.trim() || isChatLoading}
-            className="self-end bg-cyan-500 hover:bg-cyan-400 text-black p-2.5 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/25 disabled:shadow-none transition-all"
+            aria-label="Send message"
+            className="self-end bg-accent hover:bg-accent-dark text-white p-2.5 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-accent/20 disabled:shadow-none transition-all"
           >
             <Send className="w-4 h-4" />
           </button>

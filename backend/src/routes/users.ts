@@ -1,15 +1,17 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { validateRequest } from '../middleware/validator';
+import { requireAuth } from '../middleware/auth';
 import { UpdateAIConfigSchema, UpdateUserPreferencesSchema } from '@intent-platform/shared';
 import { UserService } from '../services/UserService';
 
 const router = Router();
+router.use(requireAuth);
 const userService = new UserService();
 
 // Get current user
 router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = '00000000-0000-0000-0000-000000000001'; // Demo user
+    const userId = (req as any).userId;
     const user = await userService.getUser(userId);
 
     if (!user) {
@@ -25,7 +27,7 @@ router.get('/me', async (req: Request, res: Response, next: NextFunction) => {
 // Update AI config
 router.put('/me/ai-config', validateRequest(UpdateAIConfigSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = '00000000-0000-0000-0000-000000000001'; // Demo user
+    const userId = (req as any).userId;
     const aiConfig = req.body;
 
     await userService.updateAIConfig(userId, aiConfig);
@@ -39,7 +41,7 @@ router.put('/me/ai-config', validateRequest(UpdateAIConfigSchema), async (req: R
 // Update user preferences
 router.put('/me/preferences', validateRequest(UpdateUserPreferencesSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = '00000000-0000-0000-0000-000000000001'; // Demo user
+    const userId = (req as any).userId;
     const preferences = req.body;
 
     await userService.updatePreferences(userId, preferences);

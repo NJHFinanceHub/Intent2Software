@@ -1,11 +1,13 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { validateRequest } from '../middleware/validator';
-import { SendMessageSchema } from '@intent-platform/shared';
+import { requireAuth } from '../middleware/auth';
+import { SendMessageSchema, MessageRole } from '@intent-platform/shared';
 import { ConversationService } from '../services/ConversationService';
 import { AIProviderService } from '../services/AIProviderService';
 import { logger } from '../utils/logger';
 
 const router = Router();
+router.use(requireAuth);
 const conversationService = new ConversationService();
 const aiProviderService = new AIProviderService();
 
@@ -15,7 +17,7 @@ router.post('/message', validateRequest(SendMessageSchema), async (req: Request,
     const { projectId, message } = req.body;
 
     // Add user message to conversation
-    const userMessage = await conversationService.addMessage(projectId, 'user', message);
+    const userMessage = await conversationService.addMessage(projectId, MessageRole.USER, message);
 
     // Get conversation context
     const conversation = await conversationService.getConversation(projectId);
@@ -27,7 +29,7 @@ router.post('/message', validateRequest(SendMessageSchema), async (req: Request,
     const aiResponse = await aiProviderService.processConversation(conversation);
 
     // Add assistant message
-    const assistantMessage = await conversationService.addMessage(projectId, 'assistant', aiResponse.content);
+    const assistantMessage = await conversationService.addMessage(projectId, MessageRole.ASSISTANT, aiResponse.content);
 
     // Update conversation context
     await conversationService.updateContext(projectId, aiResponse.context);

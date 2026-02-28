@@ -7,7 +7,7 @@ import { Project } from '@intent-platform/shared';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { projects, setProjects, aiConfig } = useStore();
+  const { projects, setProjects } = useStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [newProject, setNewProject] = useState({ name: '', description: '' });
@@ -37,8 +37,7 @@ export default function HomePage() {
     try {
       const response = await projectsApi.create({
         name: newProject.name,
-        description: newProject.description,
-        aiConfig: aiConfig || undefined
+        description: newProject.description
       });
 
       setShowNewProjectModal(false);

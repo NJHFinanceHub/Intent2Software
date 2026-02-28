@@ -52,7 +52,7 @@ export class ProjectService {
       [userId]
     );
 
-    return result.rows.map(row => this.mapRowToProject(row));
+    return result.rows.map((row: any) => this.mapRowToProject(row));
   }
 
   async updateProjectStatus(projectId: string, status: ProjectStatus): Promise<void> {

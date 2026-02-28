@@ -18,7 +18,8 @@ const client = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  withCredentials: true
+  withCredentials: true,
+  timeout: 30000
 });
 
 // Error handling interceptor
@@ -26,6 +27,9 @@ client.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error.response?.data || error.message);
+    if (error.response?.status === 401) {
+      window.location.href = '/';
+    }
     throw error;
   }
 );
