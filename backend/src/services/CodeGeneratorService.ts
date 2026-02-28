@@ -8,7 +8,8 @@ import {
   GeneratedFile,
   ProjectStatus,
   BuildOutput,
-  TestResults
+  TestResults,
+  WebSocketEvent
 } from '@intent-platform/shared';
 import { logger } from '../utils/logger';
 import { exec } from 'child_process';
@@ -49,7 +50,7 @@ export class CodeGeneratorService {
 
       // Step 1: Generate architecture
       await this.projectService.updateProjectStatus(projectId, ProjectStatus.PLANNING);
-      this.wsService.broadcast(projectId, 'project:status:changed', { status: ProjectStatus.PLANNING });
+      this.wsService.broadcast(projectId, WebSocketEvent.PROJECT_STATUS_CHANGED, { status: ProjectStatus.PLANNING });
 
       const architecture = await this.generateArchitecture(project, conversation);
       await this.projectService.updateProjectArchitecture(projectId, architecture);
@@ -58,7 +59,7 @@ export class CodeGeneratorService {
 
       // Step 2: Generate files
       await this.projectService.updateProjectStatus(projectId, ProjectStatus.GENERATING);
-      this.wsService.broadcast(projectId, 'project:status:changed', { status: ProjectStatus.GENERATING });
+      this.wsService.broadcast(projectId, WebSocketEvent.PROJECT_STATUS_CHANGED, { status: ProjectStatus.GENERATING });
 
       const files = await this.generateFiles(project, architecture);
       await this.projectService.updateProjectFiles(projectId, files);
@@ -67,7 +68,7 @@ export class CodeGeneratorService {
 
       // Emit file generation events
       files.forEach(file => {
-        this.wsService.broadcast(projectId, 'project:file:generated', { file });
+        this.wsService.broadcast(projectId, WebSocketEvent.FILE_GENERATED, { file });
       });
 
       // Step 3: Write files to disk
@@ -75,13 +76,13 @@ export class CodeGeneratorService {
 
       // Mark as ready
       await this.projectService.updateProjectStatus(projectId, ProjectStatus.READY);
-      this.wsService.broadcast(projectId, 'project:status:changed', { status: ProjectStatus.READY });
+      this.wsService.broadcast(projectId, WebSocketEvent.PROJECT_STATUS_CHANGED, { status: ProjectStatus.READY });
 
       logger.info(`Project ${projectId} generation completed successfully`);
     } catch (error) {
       logger.error(`Code generation failed for project ${projectId}:`, error);
       await this.projectService.updateProjectStatus(projectId, ProjectStatus.FAILED);
-      this.wsService.broadcast(projectId, 'project:status:changed', {
+      this.wsService.broadcast(projectId, WebSocketEvent.PROJECT_STATUS_CHANGED, {
         status: ProjectStatus.FAILED,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -94,7 +95,7 @@ export class CodeGeneratorService {
       logger.info(`Starting build for project ${projectId}`);
 
       await this.projectService.updateProjectStatus(projectId, ProjectStatus.BUILDING);
-      this.wsService.broadcast(projectId, 'project:build:started', {});
+      this.wsService.broadcast(projectId, WebSocketEvent.BUILD_STARTED, {});
 
       const project = await this.projectService.getProject(projectId);
       if (!project) {
@@ -104,14 +105,14 @@ export class CodeGeneratorService {
       const projectPath = join(STORAGE_PATH, projectId);
 
       // Install dependencies
-      this.wsService.broadcast(projectId, 'project:build:progress', {
+      this.wsService.broadcast(projectId, WebSocketEvent.BUILD_PROGRESS, {
         step: 'Installing dependencies'
       });
       // TODO: Ideally this should run inside a Docker sandbox to isolate untrusted code execution
       await execAsync('npm install --ignore-scripts', { cwd: projectPath, timeout: 300000 });
 
       // Run build
-      this.wsService.broadcast(projectId, 'project:build:progress', {
+      this.wsService.broadcast(projectId, WebSocketEvent.BUILD_PROGRESS, {
         step: 'Building project'
       });
       // TODO: Ideally this should run inside a Docker sandbox to isolate untrusted code execution
@@ -127,7 +128,7 @@ export class CodeGeneratorService {
       };
 
       // Run tests
-      this.wsService.broadcast(projectId, 'project:test:started', {});
+      this.wsService.broadcast(projectId, WebSocketEvent.TEST_STARTED, {});
 
       const testResults = await this.runTests(projectPath);
 
@@ -135,8 +136,8 @@ export class CodeGeneratorService {
       await this.projectService.getProject(projectId); // Refresh
       // TODO: Update build output and test results in database
 
-      this.wsService.broadcast(projectId, 'project:build:completed', { buildOutput });
-      this.wsService.broadcast(projectId, 'project:test:completed', { testResults });
+      this.wsService.broadcast(projectId, WebSocketEvent.BUILD_COMPLETED, { buildOutput });
+      this.wsService.broadcast(projectId, WebSocketEvent.TEST_COMPLETED, { testResults });
 
       logger.info(`Build completed for project ${projectId}`);
     } catch (error) {

@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { validateRequest } from '../middleware/validator';
 import { requireAuth } from '../middleware/auth';
-import { CreateProjectSchema, GenerateProjectSchema, BuildProjectSchema } from '@intent-platform/shared';
+import { CreateProjectSchema, GenerateProjectSchema, BuildProjectSchema, ProjectStatus } from '@intent-platform/shared';
 import { ProjectService } from '../services/ProjectService';
 import { ConversationService } from '../services/ConversationService';
 import { CodeGeneratorService } from '../services/CodeGeneratorService';
@@ -84,12 +84,12 @@ router.post('/:projectId/generate', validateRequest(GenerateProjectSchema), asyn
     }
 
     // Update status to generating
-    await projectService.updateProjectStatus(projectId, 'generating');
+    await projectService.updateProjectStatus(projectId, ProjectStatus.GENERATING);
 
     // Generate code asynchronously
     codeGeneratorService.generateProject(projectId).catch(error => {
       logger.error(`Code generation failed for project ${projectId}:`, error);
-      projectService.updateProjectStatus(projectId, 'failed');
+      projectService.updateProjectStatus(projectId, ProjectStatus.FAILED);
     });
 
     res.json({
@@ -112,12 +112,12 @@ router.post('/:projectId/build', validateRequest(BuildProjectSchema), async (req
     }
 
     // Update status
-    await projectService.updateProjectStatus(projectId, 'building');
+    await projectService.updateProjectStatus(projectId, ProjectStatus.BUILDING);
 
     // Build project asynchronously
     codeGeneratorService.buildProject(projectId).catch(error => {
       logger.error(`Build failed for project ${projectId}:`, error);
-      projectService.updateProjectStatus(projectId, 'failed');
+      projectService.updateProjectStatus(projectId, ProjectStatus.FAILED);
     });
 
     res.json({
