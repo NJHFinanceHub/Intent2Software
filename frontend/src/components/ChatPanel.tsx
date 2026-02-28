@@ -70,6 +70,13 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
       }
     } catch (error) {
       console.error('Failed to send message:', error);
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: MessageRole.ASSISTANT,
+        content: 'Sorry, something went wrong processing your message. Please check that the AI provider is configured correctly and try again.',
+        timestamp: new Date()
+      };
+      addMessage(errorMessage);
     } finally {
       setIsChatLoading(false);
     }
