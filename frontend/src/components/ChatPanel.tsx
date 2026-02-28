@@ -90,20 +90,20 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-surface-200 border-r border-border">
+    <div className="flex flex-col h-full bg-zinc-950 border-r border-zinc-800">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border">
-        <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Chat</h3>
+      <div className="px-4 py-3 border-b border-zinc-800">
+        <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Chat</h3>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {currentConversation?.messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center mb-3">
-              <Bot className="w-5 h-5 text-accent-light" />
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-3">
+              <Bot className="w-5 h-5 text-cyan-400" />
             </div>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-zinc-400">
               Describe your project idea and I'll help you build it.
             </p>
           </div>
@@ -117,25 +117,25 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
           >
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
               message.role === MessageRole.USER
-                ? 'bg-accent/20'
-                : 'bg-white/5'
+                ? 'bg-cyan-500/20'
+                : 'bg-zinc-800'
             }`}>
               {message.role === MessageRole.USER ? (
-                <User className="w-3.5 h-3.5 text-accent-light" />
+                <User className="w-3.5 h-3.5 text-cyan-400" />
               ) : (
-                <Bot className="w-3.5 h-3.5 text-slate-400" />
+                <Bot className="w-3.5 h-3.5 text-zinc-400" />
               )}
             </div>
             <div
               className={`max-w-[80%] rounded-xl px-3.5 py-2.5 ${
                 message.role === MessageRole.USER
-                  ? 'bg-accent text-white'
-                  : 'bg-white/5 text-slate-200 border border-border'
+                  ? 'bg-cyan-500 text-black'
+                  : 'bg-zinc-900 text-zinc-200 border border-zinc-800'
               }`}
             >
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
               <span className={`text-[10px] mt-1.5 block ${
-                message.role === MessageRole.USER ? 'text-white/50' : 'text-slate-500'
+                message.role === MessageRole.USER ? 'text-black/50' : 'text-zinc-500'
               }`}>
                 {new Date(message.timestamp).toLocaleTimeString()}
               </span>
@@ -144,14 +144,14 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
         ))}
         {isChatLoading && (
           <div className="flex gap-3 animate-fade-in">
-            <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-              <Bot className="w-3.5 h-3.5 text-slate-400" />
+            <div className="w-7 h-7 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0">
+              <Bot className="w-3.5 h-3.5 text-zinc-400" />
             </div>
-            <div className="bg-white/5 border border-border rounded-xl px-4 py-3">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
               <div className="flex gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -160,21 +160,21 @@ export default function ChatPanel({ projectId }: ChatPanelProps) {
       </div>
 
       {/* Input */}
-      <div className="border-t border-border p-3">
+      <div className="border-t border-zinc-800 p-3">
         <div className="flex gap-2">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Describe your software project..."
-            className="flex-1 resize-none bg-surface-300 border border-border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/40 transition-all"
+            className="flex-1 resize-none bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500/40 transition-all"
             rows={2}
             disabled={isChatLoading}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isChatLoading}
-            className="self-end bg-accent hover:bg-accent-dark text-white p-2.5 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-accent/20 disabled:shadow-none transition-all"
+            className="self-end bg-cyan-500 hover:bg-cyan-400 text-black p-2.5 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/25 disabled:shadow-none transition-all"
           >
             <Send className="w-4 h-4" />
           </button>

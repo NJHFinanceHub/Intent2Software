@@ -106,7 +106,7 @@ export default function ProjectPage() {
   if (!currentProject) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
-        <Loader className="w-6 h-6 animate-spin text-accent" />
+        <Loader className="w-6 h-6 animate-spin text-cyan-500" />
       </div>
     );
   }
@@ -114,13 +114,13 @@ export default function ProjectPage() {
   return (
     <div className="h-[calc(100vh-57px)] flex flex-col">
       {/* Action Bar */}
-      <div className="border-b border-border bg-surface-200/50 backdrop-blur-sm px-5 py-3">
+      <div className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-sm px-5 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-sm font-semibold text-white">{currentProject.name}</h1>
             <StatusBadge status={currentProject.status} />
             {currentProject.files.length > 0 && (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-zinc-500">
                 {currentProject.files.length} files
               </span>
             )}
@@ -131,7 +131,7 @@ export default function ProjectPage() {
               <button
                 onClick={handleGenerate}
                 disabled={isGenerating}
-                className="flex items-center gap-2 bg-accent hover:bg-accent-dark text-white px-4 py-1.5 rounded-lg text-xs font-medium shadow-lg shadow-accent/20 disabled:opacity-50 disabled:shadow-none transition-all"
+                className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-medium px-4 py-1.5 rounded-lg text-xs shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:shadow-none transition-all"
               >
                 {isGenerating ? (
                   <Loader className="w-3.5 h-3.5 animate-spin" />
@@ -147,14 +147,14 @@ export default function ProjectPage() {
                 <button
                   onClick={handleBuild}
                   disabled={isGenerating}
-                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 transition-all"
+                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 transition-all"
                 >
                   <Play className="w-3.5 h-3.5" />
                   Build & Test
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-slate-300 px-4 py-1.5 rounded-lg text-xs font-medium border border-border hover:border-border-light transition-all"
+                  className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-4 py-1.5 rounded-lg text-xs font-medium transition-all"
                 >
                   <Download className="w-3.5 h-3.5" />
                   Download
@@ -181,7 +181,7 @@ export default function ProjectPage() {
           />
         </div>
 
-        {/* Preview Panel - 50% */}
+        {/* Preview Panel - flex-1 */}
         <div className="flex-1">
           <PreviewPanel file={selectedFile} />
         </div>
@@ -195,13 +195,13 @@ function StatusBadge({ status }: { status: string }) {
     switch (status) {
       case 'ready':
         return { icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'Ready' };
-      case 'failed':
-        return { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', text: 'Failed' };
       case 'generating':
       case 'building':
-        return { icon: Loader, color: 'text-accent-light', bg: 'bg-accent/10 border-accent/20', text: status };
+        return { icon: Loader, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20', text: status };
+      case 'failed':
+        return { icon: XCircle, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', text: 'Failed' };
       default:
-        return { icon: Package, color: 'text-slate-400', bg: 'bg-white/5 border-white/10', text: status.replace(/_/g, ' ') };
+        return { icon: Package, color: 'text-zinc-400', bg: 'bg-zinc-500/10 border-zinc-500/20', text: status.replace(/_/g, ' ') };
     }
   };
 

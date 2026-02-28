@@ -45,26 +45,26 @@ export default function SettingsPage() {
     <div className="max-w-2xl mx-auto px-6 py-12">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white tracking-tight">Settings</h1>
-        <p className="text-slate-400 text-sm mt-1">Configure your AI provider and preferences</p>
+        <p className="text-zinc-400 text-sm mt-1">Configure your AI provider and preferences</p>
       </div>
 
-      <div className="bg-surface-100 border border-border rounded-2xl overflow-hidden">
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden">
         <div className="p-6 space-y-6">
           {/* AI Provider Selection */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-300 mb-2">
               AI Provider
             </label>
             <select
               value={config.provider}
               onChange={(e) => setConfig({ ...config, provider: e.target.value as AIProvider })}
-              className="w-full bg-surface-300 border border-border-light rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-all appearance-none cursor-pointer"
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all appearance-none cursor-pointer"
             >
               <option value={AIProvider.ANTHROPIC}>Anthropic Claude</option>
               <option value={AIProvider.OPENAI}>OpenAI GPT-4</option>
               <option value={AIProvider.MOCK}>Mock (for testing)</option>
             </select>
-            <p className="text-[11px] text-slate-500 mt-1.5">
+            <p className="text-[11px] text-zinc-500 mt-1.5">
               Choose which AI provider to use for code generation
             </p>
           </div>
@@ -72,22 +72,22 @@ export default function SettingsPage() {
           {/* API Key */}
           {config.provider !== AIProvider.MOCK && (
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                <Key className="w-3.5 h-3.5 inline mr-1.5 text-slate-400" />
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                <Key className="w-3.5 h-3.5 inline mr-1.5 text-zinc-400" />
                 API Key
               </label>
               <input
                 type="password"
                 value={config.apiKey}
                 onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
-                className="w-full bg-surface-300 border border-border-light rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-all font-mono"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all font-mono"
                 placeholder={
                   config.provider === AIProvider.ANTHROPIC
                     ? 'sk-ant-...'
                     : 'sk-...'
                 }
               />
-              <p className="text-[11px] text-slate-500 mt-1.5">
+              <p className="text-[11px] text-zinc-500 mt-1.5">
                 {config.provider === AIProvider.ANTHROPIC
                   ? 'Get your API key from console.anthropic.com'
                   : 'Get your API key from platform.openai.com'}
@@ -98,21 +98,21 @@ export default function SettingsPage() {
           {/* Model */}
           {config.provider !== AIProvider.MOCK && (
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Model <span className="text-slate-500 font-normal">(optional)</span>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Model <span className="text-zinc-500 font-normal">(optional)</span>
               </label>
               <input
                 type="text"
                 value={config.model}
                 onChange={(e) => setConfig({ ...config, model: e.target.value })}
-                className="w-full bg-surface-300 border border-border-light rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-all font-mono"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/50 transition-all font-mono"
                 placeholder={
                   config.provider === AIProvider.ANTHROPIC
                     ? 'claude-3-5-sonnet-20241022'
                     : 'gpt-4-turbo-preview'
                 }
               />
-              <p className="text-[11px] text-slate-500 mt-1.5">
+              <p className="text-[11px] text-zinc-500 mt-1.5">
                 Leave blank to use default model
               </p>
             </div>
@@ -120,8 +120,8 @@ export default function SettingsPage() {
 
           {/* Temperature */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Temperature <span className="text-accent-light ml-1">{config.temperature}</span>
+            <label className="block text-sm font-medium text-zinc-300 mb-2">
+              Temperature <span className="text-cyan-400 ml-1">{config.temperature}</span>
             </label>
             <input
               type="range"
@@ -130,9 +130,9 @@ export default function SettingsPage() {
               step="0.1"
               value={config.temperature}
               onChange={(e) => setConfig({ ...config, temperature: parseFloat(e.target.value) })}
-              className="w-full h-1.5 bg-surface-300 rounded-full appearance-none cursor-pointer accent-accent"
+              className="w-full h-1.5 bg-zinc-950 rounded-full appearance-none cursor-pointer accent-cyan-500"
             />
-            <div className="flex justify-between text-[11px] text-slate-500 mt-1.5">
+            <div className="flex justify-between text-[11px] text-zinc-500 mt-1.5">
               <span>More focused</span>
               <span>More creative</span>
             </div>
@@ -140,7 +140,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Save Button */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-surface-200/50">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-zinc-800 bg-zinc-950/50">
           {saveMessage && (
             <span className={`flex items-center gap-1.5 text-xs ${
               saveMessage.includes('Failed') ? 'text-red-400' : 'text-emerald-400'
@@ -152,7 +152,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={isSaving || (!config.apiKey && config.provider !== AIProvider.MOCK)}
-            className="ml-auto flex items-center gap-2 bg-accent hover:bg-accent-dark text-white px-5 py-2 rounded-xl text-sm font-medium shadow-lg shadow-accent/20 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all"
+            className="ml-auto flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black px-5 py-2 rounded-xl text-sm font-medium shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all"
           >
             <Save className="w-4 h-4" />
             {isSaving ? 'Saving...' : 'Save Settings'}
